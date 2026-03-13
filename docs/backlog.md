@@ -115,3 +115,39 @@ A user story is considered **complete** when:
 * Code is committed to the repository
 * The feature works correctly in the application
 * Documentation is updated
+
+# Product Backlog – AI Code Review Assistant
+
+## Sprint 1 – Core System Development
+
+| User Story | Description | Story Points |
+|------------|-------------|--------------|
+User Registration | Allow users to create an account to access the platform | 5 |
+User Login | Authenticate users so they can securely access the system | 3 |
+Code Upload API | Allow users to upload source code for analysis | 5 |
+Backend API Structure | Organize backend using routes, controllers, and models | 3 |
+Database Integration | Connect the application to MongoDB database | 3 |
+
+---
+
+## Sprint 2 – AI Code Analysis
+
+| User Story | Description | Story Points |
+|------------|-------------|--------------|
+AI Integration | Integrate AI service to analyze uploaded code | 8 |
+Code Quality Analysis | Detect inefficient coding practices | 5 |
+Security Issue Detection | Identify potential security vulnerabilities | 5 |
+Store Analysis Results | Save AI analysis results in database | 3 |
+Results Dashboard | Display AI analysis results in dashboard | 5 |
+
+---
+
+## Sprint 3 – Final Product
+
+| User Story | Description | Story Points |
+|------------|-------------|--------------|
+Downloadable Report | Generate downloadable report for analysis | 3 |
+Improve Dashboard UI | Improve readability and layout of dashboard | 3 |
+Automated Testing | Implement unit tests for APIs | 5 |
+CI Build Validation | Fail build when tests fail | 3 |
+Performance Optimization | Improve API and database performance | 5 |
