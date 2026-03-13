@@ -3,6 +3,8 @@ const connectDB = require("./config/db");
 
 // Import routes
 const analysisRoutes = require("./routes/analysisRoutes");
+const authRoutes = require("./routes/authRoutes");
+const uploadRoutes = require("./routes/uploadRoutes");
 
 const app = express();
 
@@ -12,8 +14,10 @@ connectDB();
 // Middleware
 app.use(express.json());
 
-// Use routes
+// Routes
 app.use("/api", analysisRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api/code", uploadRoutes);
 
 // Test route
 app.get("/", (req, res) => {
