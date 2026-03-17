@@ -1,0 +1,32 @@
+{
+  "name": "project-techai",
+  "version": "1.0.0",
+  "description": "The AI Code Review Assistant is a web-based application designed to help software developers automatically analyze their code and receive intelligent feedback. The system uses artificial intelligence to detect coding issues, potential bugs, security vulnerabilities, and code quality problems.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/OntarioTech-University/project-techai.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/OntarioTech-University/project-techai/issues"
+  },
+  "homepage": "https://github.com/OntarioTech-University/project-techai#readme",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "mongoose": "^9.3.0"
+  }
+}

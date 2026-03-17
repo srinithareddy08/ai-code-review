@@ -1,40 +1,29 @@
-const User = require("../models/user");
-const bcrypt = require("bcryptjs");
+const users = [];
 
-exports.register = async (req, res) => {
+exports.register = (req, res) => {
   const { email, password } = req.body;
 
-  try {
-    const hashedPassword = await bcrypt.hash(password, 10);
+  users.push({ email, password });
 
-    const user = new User({
-      email,
-      password: hashedPassword
-    });
-
-    await user.save();
-
-    res.json({ message: "User registered successfully" });
-
-  } catch (error) {
-    res.status(500).json({ error: "Registration failed" });
-  }
+  res.json({
+    message: "User registered successfully"
+  });
 };
 
-exports.login = async (req, res) => {
+exports.login = (req, res) => {
   const { email, password } = req.body;
 
-  const user = await User.findOne({ email });
+  const user = users.find(
+    u => u.email === email && u.password === password
+  );
 
   if (!user) {
-    return res.status(400).json({ message: "User not found" });
+    return res.status(401).json({
+      message: "Invalid credentials"
+    });
   }
 
-  const isMatch = await bcrypt.compare(password, user.password);
-
-  if (!isMatch) {
-    return res.status(400).json({ message: "Invalid credentials" });
-  }
-
-  res.json({ message: "Login successful" });
+  res.json({
+    message: "Login successful"
+  });
 };

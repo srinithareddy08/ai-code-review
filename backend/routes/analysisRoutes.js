@@ -1,13 +1,8 @@
 const express = require("express");
 const router = express.Router();
 
-router.post("/analyze", (req, res) => {
-    const { code } = req.body;
+const analysisController = require("../controllers/analysiscontroller");
 
-    res.json({
-        message: "Code analysis endpoint working",
-        receivedCode: code
-    });
-});
+router.post("/", analysisController.analyzeCode);
 
 module.exports = router;

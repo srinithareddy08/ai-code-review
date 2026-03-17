@@ -1,19 +1,20 @@
 const express = require("express");
+const multer = require("multer");
+
 const router = express.Router();
+const uploadController = require("../controllers/uploadcontroller");
 
-router.post("/upload", (req, res) => {
-
-  const { code } = req.body;
-
-  if (!code) {
-    return res.status(400).json({ message: "No code provided" });
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "uploads/");
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + "-" + file.originalname);
   }
-
-  res.json({
-    message: "Code received successfully",
-    code: code
-  });
-
 });
+
+const upload = multer({ storage });
+
+router.post("/", upload.single("file"), uploadController.uploadCode);
 
 module.exports = router;

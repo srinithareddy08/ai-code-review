@@ -1,31 +1,29 @@
 const express = require("express");
-const connectDB = require("./config/db");
+const cors = require("cors");
 
-// Import routes
-const analysisRoutes = require("./routes/analysisRoutes");
 const authRoutes = require("./routes/authRoutes");
 const uploadRoutes = require("./routes/uploadRoutes");
+const analysisRoutes = require("./routes/analysisRoutes");
+const dashboardRoutes = require("./routes/dashboardRoutes");
 
 const app = express();
 
-// Connect database
-connectDB();
-
-// Middleware
+app.use(cors());
 app.use(express.json());
 
-// Routes
-app.use("/api", analysisRoutes);
-app.use("/api/auth", authRoutes);
-app.use("/api/code", uploadRoutes);
-
-// Test route
 app.get("/", (req, res) => {
-  res.send("AI Code Review Assistant Backend Running");
+  res.send("AI Code Review Backend Running");
 });
+
+app.use("/api/auth", authRoutes);
+app.use("/api/upload", uploadRoutes);
+app.use("/api/analyze", analysisRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 
 const PORT = 5000;
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+const server = app.listen(5000, () => {
+  console.log("Server running on port 5000");
 });
+
+module.exports = server;
