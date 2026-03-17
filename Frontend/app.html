@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>AI Code Review Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <h2>🤖 AI Review</h2>
+
+  <button onclick="showTab('analyze')" id="analyzeBtn" class="active">
+    🧠 Analyze
+  </button>
+
+  <button onclick="showTab('dashboard')" id="dashboardBtn">
+    📊 Dashboard
+  </button>
+
+  <button onclick="logout()">🚪 Logout</button>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <div class="header">AI Code Review Dashboard</div>
+
+  <!-- ANALYZE -->
+  <div id="analyzeTab" class="card">
+    <h3>Analyze Your Code</h3>
+
+    <!-- FILE UPLOAD -->
+    <input type="file" id="fileInput" accept=".js,.txt">
+    <button onclick="uploadFile()">Upload & Analyze</button>
+
+    <br><br>
+
+    <!-- TEXT INPUT -->
+    <textarea id="code" placeholder="Or paste your code here..."></textarea>
+
+    <button onclick="analyze()">Analyze Code</button>
+
+    <div id="result"></div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="dashboardTab" class="card" style="display:none;">
+    <h3>Analysis History</h3>
+
+    <button onclick="loadDashboard()">Refresh</button>
+
+    <div id="dashboard"></div>
+  </div>
+
+</div>
+
+<script>
+
+// 🔒 PROTECT PAGE
+if (!localStorage.getItem("loggedIn")) {
+  window.location = "index.html";
+}
+
+// 🔁 SWITCH TABS
+function showTab(tab) {
+
+  document.getElementById("analyzeTab").style.display =
+    tab === "analyze" ? "block" : "none";
+
+  document.getElementById("dashboardTab").style.display =
+    tab === "dashboard" ? "block" : "none";
+
+  document.getElementById("analyzeBtn").classList.remove("active");
+  document.getElementById("dashboardBtn").classList.remove("active");
+
+  if (tab === "analyze") {
+    document.getElementById("analyzeBtn").classList.add("active");
+  } else {
+    document.getElementById("dashboardBtn").classList.add("active");
+  }
+}
+
+// 🚪 LOGOUT
+function logout() {
+  localStorage.removeItem("loggedIn");
+  localStorage.removeItem("userEmail");
+  window.location = "index.html";
+}
+
+// 🔍 ANALYZE FROM TEXTAREA
+async function analyze() {
+
+  const code = document.getElementById("code").value;
+
+  const res = await fetch("http://localhost:5000/api/analyze", {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({ code })
+  });
+
+  const data = await res.json();
+
+  displayResult(data);
+}
+
+// 📁 ANALYZE FROM FILE
+async function uploadFile() {
+
+  const file = document.getElementById("fileInput").files[0];
+
+  if (!file) {
+    alert("Please select a file");
+    return;
+  }
+
+  const reader = new FileReader();
+
+  reader.onload = async function(e) {
+
+    const code = e.target.result;
+
+    const res = await fetch("http://localhost:5000/api/analyze", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({ code })
+    });
+
+    const data = await res.json();
+
+    displayResult(data, file.name);
+  };
+
+  reader.readAsText(file);
+}
+
+// 🎯 DISPLAY RESULT (COMMON FUNCTION)
+function displayResult(data, fileName = null) {
+
+  let output = "";
+
+  if (fileName) {
+    output += `<p><b>File:</b> ${fileName}</p>`;
+  }
+
+  output += "<h3>Issues</h3><ul>";
+
+  (data.issues || []).forEach(i => {
+    output += `<li>${i}</li>`;
+  });
+
+  output += "</ul><h3>Suggestions</h3><ul>";
+
+  (data.suggestions || []).forEach(s => {
+    output += `<li>${s}</li>`;
+  });
+
+  output += "</ul>";
+
+  document.getElementById("result").innerHTML = output;
+}
+
+// 📊 LOAD DASHBOARD
+async function loadDashboard() {
+
+  const res = await fetch("http://localhost:5000/api/dashboard/results");
+  const data = await res.json();
+
+  let output = `<h3>Total Analyses: ${data.length}</h3>`;
+
+  data.forEach((item, index) => {
+    output += `
+      <div style="margin-bottom:15px; padding:10px; background:#020617; border-radius:8px;">
+        <strong>Analysis ${index + 1}</strong><br>
+        <b>Code:</b> ${item.code}<br>
+        <b>Issues:</b> ${item.issues.join(", ")}<br>
+        <b>Suggestions:</b> ${item.suggestions.join(", ")}
+      </div>
+    `;
+  });
+
+  document.getElementById("dashboard").innerHTML = output;
+}
+
+</script>
+
+</body>
+</html>
