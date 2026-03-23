@@ -1,0 +1,12 @@
+$kind: http-request
+url: |
+  http://localhost:5000/api/analyze
+method: POST
+body:
+  type: json
+  content: "{\r
+
+    \  \"code\": \"console.log('hello')\"\r
+
+    }"
+order: 4500804077886017

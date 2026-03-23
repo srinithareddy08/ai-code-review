@@ -1,39 +1,49 @@
-let history = [];
+const Analysis = require("../models/analysis");
 
-exports.analyzeCode = (req, res) => {
+// 🔹 Analyze code + Save to DB
+exports.analyzeCode = async (req, res) => {
+  try {
+    const { code, userId } = req.body;
 
-  const code = req.body.code;
+    if (!code || !userId) {
+      return res.status(400).json({ error: "Code and userId are required" });
+    }
 
-  let issues = [];
-  let suggestions = [];
+    // 🔹 Basic AI logic (you can improve later)
+    const result = {
+      message: "Basic analysis done",
+      issues: code.includes("var")
+        ? ["Avoid using 'var', use 'let' or 'const'"]
+        : ["No major issues found"]
+    };
 
-  if (code.includes("var ")) {
-    issues.push("Avoid using 'var'.");
-    suggestions.push("Use 'let' or 'const' instead.");
+    // 🔹 Save analysis
+    const savedAnalysis = await Analysis.create({
+      userId,
+      code,
+      result
+    });
+
+    res.status(200).json(savedAnalysis);
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Analysis failed" });
   }
-
-  if (code.includes("console.log")) {
-    issues.push("Remove console.log statements.");
-    suggestions.push("Avoid console logs in production.");
-  }
-
-  if (!code.trim().endsWith(";")) {
-    issues.push("Missing semicolon.");
-    suggestions.push("Add semicolon at the end.");
-  }
-
-  if (issues.length === 0) {
-    issues.push("No major issues detected.");
-    suggestions.push("Code looks clean.");
-  }
-
-  const result = { code, issues, suggestions };
-
-  history.push(result);
-
-  res.json(result);
 };
 
-exports.getResults = (req, res) => {
-  res.json(history);
+
+// 🔹 Get analysis history
+exports.getHistory = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const history = await Analysis.find({ userId })
+      .sort({ createdAt: -1 });
+
+    res.status(200).json(history);
+
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch history" });
+  }
 };

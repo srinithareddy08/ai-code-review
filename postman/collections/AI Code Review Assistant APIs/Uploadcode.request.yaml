@@ -1,0 +1,12 @@
+$kind: http-request
+name: Uploadcode
+url: http://localhost:5000/api/code/upload
+method: POST
+body:
+  type: json
+  content: "{\r
+
+    \ \"code\": \"console.log('Hello World');\"\r
+
+    }"
+order: 4306471757026903

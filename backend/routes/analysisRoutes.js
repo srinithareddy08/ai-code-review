@@ -3,6 +3,10 @@ const router = express.Router();
 
 const analysisController = require("../controllers/analysiscontroller");
 
-router.post("/", analysisController.analyzeCode);
+// 🔹 Analyze code
+router.post("/analyze", analysisController.analyzeCode);
+
+// 🔹 Get history
+router.get("/history/:userId", analysisController.getHistory);
 
 module.exports = router;

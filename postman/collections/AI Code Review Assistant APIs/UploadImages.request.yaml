@@ -1,0 +1,17 @@
+$kind: http-request
+name: UploadImages
+url: |
+  http://localhost:5000/api/upload
+method: POST
+body:
+  type: json
+  content: "{\r
+
+    \  \"message\": \"File uploaded successfully\",\r
+
+    \  \"filename\": \"1718653435-test.js\",\r
+
+    \  \"originalName\": \"test.js\"\r
+
+    }"
+order: 4416536993325395
