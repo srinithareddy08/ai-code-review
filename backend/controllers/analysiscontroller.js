@@ -34,23 +34,39 @@ exports.analyzeCode = async (req, res) => {
 };
 
 
-// 🔹 Get analysis history
+// 🔹 Get analysis history + SEARCH FEATURE
 exports.getHistory = async (req, res) => {
   try {
     const { userId } = req.params;
+    const { query } = req.query;
 
-    const history = await Analysis.find({ userId })
+    if (!userId) {
+      return res.status(400).json({ error: "User ID is required" });
+    }
+
+    let filter = { userId };
+
+    // 🔥 SEARCH LOGIC
+    if (query) {
+      filter.$or = [
+        { code: { $regex: query, $options: "i" } },
+        { "result.issues": { $regex: query, $options: "i" } }
+      ];
+    }
+
+    const history = await Analysis.find(filter)
       .sort({ createdAt: -1 });
 
     res.status(200).json(history);
 
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: "Failed to fetch history" });
   }
 };
 
 
-// 🔥 NEW FEATURE — Download Report (PDF)
+// 🔥 Download Report (PDF)
 exports.downloadReport = async (req, res) => {
   try {
     const { id } = req.params;
@@ -63,7 +79,7 @@ exports.downloadReport = async (req, res) => {
 
     const doc = new PDFDocument();
 
-    // 🔹 Set headers
+    // 🔹 Headers
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader(
       "Content-Disposition",
@@ -72,12 +88,12 @@ exports.downloadReport = async (req, res) => {
 
     doc.pipe(res);
 
-    // 🔹 PDF Content
+    // 🔹 Title
     doc.fontSize(18).text("AI Code Review Report", { align: "center" });
 
     doc.moveDown();
     doc.fontSize(12).text(`User ID: ${analysis.userId}`);
-    doc.text(`Date: ${analysis.createdAt}`);
+    doc.text(`Date: ${new Date(analysis.createdAt).toLocaleString()}`);
 
     doc.moveDown();
     doc.text("Code:");
@@ -86,7 +102,7 @@ exports.downloadReport = async (req, res) => {
     doc.moveDown();
     doc.text("Analysis Result:");
 
-    if (analysis.result.issues && analysis.result.issues.length > 0) {
+    if (analysis.result?.issues?.length > 0) {
       analysis.result.issues.forEach((issue, index) => {
         doc.text(`${index + 1}. ${issue}`);
       });
