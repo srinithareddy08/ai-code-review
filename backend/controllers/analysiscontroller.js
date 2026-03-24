@@ -1,7 +1,7 @@
 const Analysis = require("../models/analysis");
 const PDFDocument = require("pdfkit");
 
-// 🔹 Analyze code + Save to DB
+// 🔹 Analyze code + Advanced Bug Detection (Enhanced)
 exports.analyzeCode = async (req, res) => {
   try {
     const { code, userId } = req.body;
@@ -10,15 +10,90 @@ exports.analyzeCode = async (req, res) => {
       return res.status(400).json({ error: "Code and userId are required" });
     }
 
-    // 🔹 Basic AI logic
+    let issues = [];
+
+    // 🔴 SECURITY ISSUES (HIGH)
+    if (code.includes("eval(")) {
+      issues.push({
+        type: "Security",
+        severity: "High",
+        message: "Avoid using eval() as it can lead to code injection"
+      });
+    }
+
+    if (code.includes("innerHTML")) {
+      issues.push({
+        type: "Security",
+        severity: "High",
+        message: "Using innerHTML can expose XSS vulnerabilities"
+      });
+    }
+
+    // 🟠 PERFORMANCE ISSUES (MEDIUM)
+    if ((code.match(/for\s*\(/g) || []).length > 1) {
+      issues.push({
+        type: "Performance",
+        severity: "Medium",
+        message: "Nested loops can cause performance issues"
+      });
+    }
+
+    if (code.includes("setTimeout") && code.includes("0")) {
+      issues.push({
+        type: "Performance",
+        severity: "Medium",
+        message: "Frequent setTimeout usage may affect performance"
+      });
+    }
+
+    // 🟡 CODE SMELLS (LOW)
+    if (code.includes("var")) {
+      issues.push({
+        type: "Code Smell",
+        severity: "Low",
+        message: "Avoid using 'var', use 'let' or 'const'"
+      });
+    }
+
+    if (code.length > 300) {
+      issues.push({
+        type: "Code Smell",
+        severity: "Low",
+        message: "Code is too long, consider modularizing"
+      });
+    }
+
+    // 🔵 BEST PRACTICES (LOW)
+    if (code.includes("==") && !code.includes("===")) {
+      issues.push({
+        type: "Best Practice",
+        severity: "Low",
+        message: "Use strict equality '===' instead of '=='"
+      });
+    }
+
+    if (code.includes("async") && !code.includes("try")) {
+      issues.push({
+        type: "Best Practice",
+        severity: "Medium",
+        message: "Use try-catch in async functions"
+      });
+    }
+
+    // ✅ Default case
+    if (issues.length === 0) {
+      issues.push({
+        type: "Good Code",
+        severity: "None",
+        message: "No major issues found"
+      });
+    }
+
     const result = {
-      message: "Basic analysis done",
-      issues: code.includes("var")
-        ? ["Avoid using 'var', use 'let' or 'const'"]
-        : ["No major issues found"]
+      message: "Advanced analysis completed",
+      issues
     };
 
-    // 🔹 Save analysis
     const savedAnalysis = await Analysis.create({
       userId,
       code,
@@ -46,11 +121,12 @@ exports.getHistory = async (req, res) => {
 
     let filter = { userId };
 
-    // 🔥 SEARCH LOGIC
     if (query) {
       filter.$or = [
         { code: { $regex: query, $options: "i" } },
-        { "result.issues": { $regex: query, $options: "i" } }
+        { "result.issues.message": { $regex: query, $options: "i" } },
+        { "result.issues.type": { $regex: query, $options: "i" } },
+        { "result.issues.severity": { $regex: query, $options: "i" } }
       ];
     }
 
@@ -66,7 +142,7 @@ exports.getHistory = async (req, res) => {
 };
 
 
-// 🔥 Download Report (PDF)
+// 🔥 Download Report (Enhanced PDF)
 exports.downloadReport = async (req, res) => {
   try {
     const { id } = req.params;
@@ -79,7 +155,6 @@ exports.downloadReport = async (req, res) => {
 
     const doc = new PDFDocument();
 
-    // 🔹 Headers
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader(
       "Content-Disposition",
@@ -104,7 +179,9 @@ exports.downloadReport = async (req, res) => {
 
     if (analysis.result?.issues?.length > 0) {
       analysis.result.issues.forEach((issue, index) => {
-        doc.text(`${index + 1}. ${issue}`);
+        doc.text(
+          `${index + 1}. [${issue.type}] (${issue.severity}) ${issue.message}`
+        );
       });
     } else {
       doc.text("No issues found");
