@@ -62,6 +62,15 @@ project-techai/
 │
 │── README.md
 ```
+## 🔍 Advanced Bug Detection
+
+The system performs static code analysis and detects:
+- Security vulnerabilities (High severity)
+- Performance issues (Medium severity)
+- Code smells (Low severity)
+- Best practice violations
+
+Each issue is categorized and assigned a severity level to help developers prioritize fixes.
 ---
 ## ⚙️ Installation & Setup
 ### 1️⃣ Clone the repository
