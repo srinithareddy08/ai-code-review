@@ -1,7 +1,7 @@
 const Analysis = require("../models/analysis");
 const PDFDocument = require("pdfkit");
 
-// 🔹 Analyze code + Advanced Bug Detection (Enhanced)
+// 🔹 Analyze code (FINAL VERSION)
 exports.analyzeCode = async (req, res) => {
   try {
     const { code, userId } = req.body;
@@ -12,12 +12,13 @@ exports.analyzeCode = async (req, res) => {
 
     let issues = [];
 
-    // 🔴 SECURITY ISSUES (HIGH)
+    // 🔴 SECURITY (HIGH)
     if (code.includes("eval(")) {
       issues.push({
         type: "Security",
         severity: "High",
-        message: "Avoid using eval() as it can lead to code injection"
+        message: "Avoid using eval() as it can lead to code injection",
+        suggestion: "Use safer alternatives like functions or JSON parsing"
       });
     }
 
@@ -25,16 +26,18 @@ exports.analyzeCode = async (req, res) => {
       issues.push({
         type: "Security",
         severity: "High",
-        message: "Using innerHTML can expose XSS vulnerabilities"
+        message: "Using innerHTML can expose XSS vulnerabilities",
+        suggestion: "Use textContent or sanitize input properly"
       });
     }
 
-    // 🟠 PERFORMANCE ISSUES (MEDIUM)
+    // 🟠 PERFORMANCE (MEDIUM)
     if ((code.match(/for\s*\(/g) || []).length > 1) {
       issues.push({
         type: "Performance",
         severity: "Medium",
-        message: "Nested loops can cause performance issues"
+        message: "Nested loops can cause performance issues",
+        suggestion: "Optimize using hashmap or reduce iterations"
       });
     }
 
@@ -42,16 +45,18 @@ exports.analyzeCode = async (req, res) => {
       issues.push({
         type: "Performance",
         severity: "Medium",
-        message: "Frequent setTimeout usage may affect performance"
+        message: "Frequent setTimeout usage may affect performance",
+        suggestion: "Avoid unnecessary async delays or batch operations"
       });
     }
 
-    // 🟡 CODE SMELLS (LOW)
+    // 🟡 CODE SMELL (LOW)
     if (code.includes("var")) {
       issues.push({
         type: "Code Smell",
         severity: "Low",
-        message: "Avoid using 'var', use 'let' or 'const'"
+        message: "Avoid using 'var', use 'let' or 'const'",
+        suggestion: "Use let or const for better scoping"
       });
     }
 
@@ -59,16 +64,18 @@ exports.analyzeCode = async (req, res) => {
       issues.push({
         type: "Code Smell",
         severity: "Low",
-        message: "Code is too long, consider modularizing"
+        message: "Code is too long, consider modularizing",
+        suggestion: "Break code into smaller reusable functions"
       });
     }
 
-    // 🔵 BEST PRACTICES (LOW)
+    // 🔵 BEST PRACTICES
     if (code.includes("==") && !code.includes("===")) {
       issues.push({
         type: "Best Practice",
         severity: "Low",
-        message: "Use strict equality '===' instead of '=='"
+        message: "Use strict equality '===' instead of '=='",
+        suggestion: "Always prefer === for safer comparisons"
       });
     }
 
@@ -76,16 +83,18 @@ exports.analyzeCode = async (req, res) => {
       issues.push({
         type: "Best Practice",
         severity: "Medium",
-        message: "Use try-catch in async functions"
+        message: "Async functions should use try-catch",
+        suggestion: "Wrap async logic inside try-catch for error handling"
       });
     }
 
-    // ✅ Default case
+    // ✅ DEFAULT
     if (issues.length === 0) {
       issues.push({
         type: "Good Code",
         severity: "None",
-        message: "No major issues found"
+        message: "No major issues found",
+        suggestion: "Your code follows good practices"
       });
     }
 
@@ -108,8 +117,7 @@ exports.analyzeCode = async (req, res) => {
   }
 };
 
-
-// 🔹 Get analysis history + SEARCH FEATURE
+// 🔹 Get history with search
 exports.getHistory = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -130,8 +138,7 @@ exports.getHistory = async (req, res) => {
       ];
     }
 
-    const history = await Analysis.find(filter)
-      .sort({ createdAt: -1 });
+    const history = await Analysis.find(filter).sort({ createdAt: -1 });
 
     res.status(200).json(history);
 
@@ -141,8 +148,7 @@ exports.getHistory = async (req, res) => {
   }
 };
 
-
-// 🔥 Download Report (Enhanced PDF)
+// 🔥 Download Report (FINAL PDF)
 exports.downloadReport = async (req, res) => {
   try {
     const { id } = req.params;
@@ -182,6 +188,10 @@ exports.downloadReport = async (req, res) => {
         doc.text(
           `${index + 1}. [${issue.type}] (${issue.severity}) ${issue.message}`
         );
+
+        if (issue.suggestion) {
+          doc.text(`   👉 Suggestion: ${issue.suggestion}`);
+        }
       });
     } else {
       doc.text("No issues found");
