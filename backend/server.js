@@ -6,6 +6,7 @@ const authRoutes = require("./routes/authRoutes");
 const uploadRoutes = require("./routes/uploadRoutes");
 const analysisRoutes = require("./routes/analysisRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
+const testRoutes = require("./routes/testRoutes");
 
 const app = express();
 
@@ -23,6 +24,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/analyze", analysisRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/test", testRoutes);
 
 // ✅ FIXED MongoDB Connection
 mongoose.connect("mongodb://127.0.0.1:27017/ai-code-review")
