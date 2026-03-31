@@ -65,7 +65,6 @@ if (!localStorage.getItem("loggedIn")) {
 
 // 🔁 SWITCH TABS
 function showTab(tab) {
-
   document.getElementById("analyzeTab").style.display =
     tab === "analyze" ? "block" : "none";
 
@@ -75,37 +74,37 @@ function showTab(tab) {
   document.getElementById("analyzeBtn").classList.remove("active");
   document.getElementById("dashboardBtn").classList.remove("active");
 
-  if (tab === "analyze") {
-    document.getElementById("analyzeBtn").classList.add("active");
-  } else {
-    document.getElementById("dashboardBtn").classList.add("active");
-  }
+  document.getElementById(tab + "Btn").classList.add("active");
 }
 
 // 🚪 LOGOUT
 function logout() {
-  localStorage.removeItem("loggedIn");
-  localStorage.removeItem("userEmail");
+  localStorage.clear();
   window.location = "index.html";
 }
 
-// 🔍 ANALYZE FROM TEXTAREA
-async function analyze() {
+// 🎨 COLOR HELPER
+function getColor(severity) {
+  if (severity === "High") return "#ef4444";
+  if (severity === "Medium") return "#f59e0b";
+  return "#22c55e";
+}
 
+// 🔍 ANALYZE TEXT
+async function analyze() {
   const code = document.getElementById("code").value;
 
   const res = await fetch("http://localhost:5000/api/analyze", {
     method: "POST",
     headers: {"Content-Type":"application/json"},
-    body: JSON.stringify({ code })
+    body: JSON.stringify({ code, userId: "123" })
   });
 
   const data = await res.json();
-
   displayResult(data);
 }
 
-// 📁 ANALYZE FROM FILE
+// 📁 FILE ANALYZE
 async function uploadFile() {
 
   const file = document.getElementById("fileInput").files[0];
@@ -121,10 +120,14 @@ async function uploadFile() {
 
     const code = e.target.result;
 
+    // ✅ STEP 1 — Put code into textarea
+    document.getElementById("code").value = code;
+
+    // ✅ STEP 2 — Send to backend
     const res = await fetch("http://localhost:5000/api/analyze", {
       method: "POST",
       headers: {"Content-Type":"application/json"},
-      body: JSON.stringify({ code })
+      body: JSON.stringify({ code, userId: "123" })
     });
 
     const data = await res.json();
@@ -135,47 +138,81 @@ async function uploadFile() {
   reader.readAsText(file);
 }
 
-// 🎯 DISPLAY RESULT (COMMON FUNCTION)
+// 🎯 DISPLAY RESULT (NEW STRUCTURE)
 function displayResult(data, fileName = null) {
 
-  let output = "";
+  const issues = data.result?.issues || [];
+
+  let output = `<h3>Analysis Result</h3>`;
 
   if (fileName) {
     output += `<p><b>File:</b> ${fileName}</p>`;
   }
 
-  output += "<h3>Issues</h3><ul>";
-
-  (data.issues || []).forEach(i => {
-    output += `<li>${i}</li>`;
+  issues.forEach(issue => {
+    output += `
+      <div style="
+        border-left:5px solid ${getColor(issue.severity)};
+        padding:10px;
+        margin-bottom:10px;
+        background:#1e293b;
+        border-radius:6px;
+      ">
+        <b>${issue.type}</b> (${issue.severity})<br>
+        ${issue.message}<br>
+        <i>👉 ${issue.suggestion || ""}</i>
+      </div>
+    `;
   });
-
-  output += "</ul><h3>Suggestions</h3><ul>";
-
-  (data.suggestions || []).forEach(s => {
-    output += `<li>${s}</li>`;
-  });
-
-  output += "</ul>";
 
   document.getElementById("result").innerHTML = output;
 }
 
-// 📊 LOAD DASHBOARD
+// 📄 DOWNLOAD FUNCTION (GLOBAL)
+function downloadReport(id) {
+  window.open(`http://localhost:5000/api/analyze/report/${id}`, "_blank");
+}
+
+// 📊 DASHBOARD
 async function loadDashboard() {
 
-  const res = await fetch("http://localhost:5000/api/dashboard/results");
+  const res = await fetch("http://localhost:5000/api/analyze/history/123");
   const data = await res.json();
 
   let output = `<h3>Total Analyses: ${data.length}</h3>`;
 
   data.forEach((item, index) => {
+
+    let issuesHTML = item.result.issues.map(issue => `
+      <div style="
+        border-left:5px solid ${getColor(issue.severity)};
+        padding:8px;
+        margin:5px 0;
+        background:#020617;
+        border-radius:6px;
+      ">
+        <b>${issue.type}</b> (${issue.severity})<br>
+        ${issue.message}<br>
+        <i>👉 ${issue.suggestion || ""}</i>
+      </div>
+    `).join("");
+
     output += `
-      <div style="margin-bottom:15px; padding:10px; background:#020617; border-radius:8px;">
-        <strong>Analysis ${index + 1}</strong><br>
-        <b>Code:</b> ${item.code}<br>
-        <b>Issues:</b> ${item.issues.join(", ")}<br>
-        <b>Suggestions:</b> ${item.suggestions.join(", ")}
+      <div style="
+        margin-bottom:20px;
+        padding:15px;
+        background:#1e293b;
+        border-radius:10px;
+      ">
+        <b>Analysis ${index + 1}</b><br><br>
+
+        <pre>${item.code}</pre>
+
+        ${issuesHTML}
+
+        <button onclick="downloadReport('${item._id}')">
+          📄 Download Report
+        </button>
       </div>
     `;
   });
@@ -184,6 +221,5 @@ async function loadDashboard() {
 }
 
 </script>
-
 </body>
 </html>

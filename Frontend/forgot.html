@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Forgot Password</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="center">
+
+<div class="card">
+  <h2>🔑 Reset Password</h2>
+
+  <input id="email" placeholder="Enter your email">
+  <input id="newPassword" type="password" placeholder="New Password">
+
+  <button onclick="resetPassword()">Reset Password</button>
+
+  <p><a href="index.html">Back to Login</a></p>
+
+  <p id="msg"></p>
+</div>
+
+<script>
+
+async function resetPassword() {
+
+  const email = document.getElementById("email").value.trim();
+  const newPassword = document.getElementById("newPassword").value.trim();
+
+  if (!email || !newPassword) {
+    msg.innerText = "❌ Please fill all fields";
+    return;
+  }
+
+  try {
+    const res = await fetch("http://localhost:5000/api/auth/forgot-password", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ email, newPassword })
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+      msg.innerText = "✅ Password reset successful";
+    } else {
+      msg.innerText = "❌ " + data.message;
+    }
+
+  } catch (err) {
+    console.error(err);
+    msg.innerText = "❌ Server not reachable";
+  }
+}
+
+</script>
+</body>
+</html>
