@@ -1,63 +1,74 @@
-const users = [];
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+
+// ✅ FIX 2: Use MongoDB User model instead of in-memory array
+const User = require("../models/User");
 
 /**
  * REGISTER CONTROLLER
  */
-exports.register = (req, res) => {
-  const { email, password } = req.body;
+exports.register = async (req, res) => {
+  // ✅ FIX 5: async/await with try/catch for proper error handling
+  try {
+    const { email, password } = req.body;
 
-  // ❌ Check empty fields
-  if (!email || !password) {
-    return res.status(400).json({ message: "All fields are required" });
+    // Check duplicate user in MongoDB
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: "User already exists" });
+    }
+
+    // ✅ FIX 1: Hash password with bcrypt before saving (never store plain text)
+    const hashed = await bcrypt.hash(password, 10);
+
+    // ✅ FIX 2: Save to MongoDB instead of in-memory array
+    const newUser = new User({ email, password: hashed });
+    await newUser.save();
+
+    return res.status(201).json({
+      message: "User registered successfully",
+      user: { email },
+    });
+  } catch (err) {
+    console.error("Register error:", err);
+    return res.status(500).json({ message: "Server error during registration" });
   }
-
-  // ❌ Basic email format validation
-  if (!email.includes("@")) {
-    return res.status(400).json({ message: "Invalid email format" });
-  }
-
-  // ❌ Password length validation
-  if (password.length < 6) {
-    return res.status(400).json({ message: "Password must be at least 6 characters" });
-  }
-
-  // ❌ Check duplicate user
-  const existingUser = users.find(u => u.email === email);
-  if (existingUser) {
-    return res.status(400).json({ message: "User already exists" });
-  }
-
-  // ✅ Save user
-  users.push({ email, password });
-
-  return res.status(201).json({
-    message: "User registered successfully",
-    user: { email }
-  });
 };
 
 /**
  * LOGIN CONTROLLER
  */
-exports.login = (req, res) => {
-  const { email, password } = req.body;
+exports.login = async (req, res) => {
+  // ✅ FIX 5: async/await with try/catch for proper error handling
+  try {
+    const { email, password } = req.body;
 
-  // ❌ Check empty fields
-  if (!email || !password) {
-    return res.status(400).json({ message: "All fields are required" });
+    // Find user in MongoDB
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(401).json({ message: "Invalid email or password" });
+    }
+
+    // ✅ FIX 4: Use bcrypt.compare() instead of plain string comparison
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: "Invalid email or password" });
+    }
+
+    // ✅ FIX 3: Generate JWT token so frontend can authenticate future requests
+    const token = jwt.sign(
+      { userId: user._id, email: user.email },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" }
+    );
+
+    return res.status(200).json({
+      message: "Login successful",
+      token,
+      user: { email: user.email },
+    });
+  } catch (err) {
+    console.error("Login error:", err);
+    return res.status(500).json({ message: "Server error during login" });
   }
-
-  // 🔍 Find user
-  const user = users.find(u => u.email === email && u.password === password);
-
-  // ❌ If not found
-  if (!user) {
-    return res.status(401).json({ message: "Invalid email or password" });
-  }
-
-  // ✅ Success
-  return res.status(200).json({
-    message: "Login successful",
-    user: { email }
-  });
 };
