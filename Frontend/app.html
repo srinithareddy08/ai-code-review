@@ -1,225 +1,530 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>AI Code Review Dashboard</title>
-  <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — AI Code Review</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#070b14;--s1:#0d1424;--s2:#121b30;
+  --b1:rgba(148,163,184,0.08);--b2:rgba(148,163,184,0.14);
+  --blue:#3b82f6;--indigo:#6366f1;--green:#10b981;--amber:#f59e0b;--red:#ef4444;--teal:#14b8a6;
+  --text:#f1f5f9;--muted:#64748b;--soft:#94a3b8;
+  --font:'Plus Jakarta Sans',sans-serif;--mono:'JetBrains Mono',monospace;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;display:flex;min-height:100vh}
+.sidebar{width:220px;min-width:220px;height:100vh;background:var(--s1);border-right:1px solid var(--b1);display:flex;flex-direction:column;position:fixed;top:0;left:0}
+.sb-logo{padding:20px 18px;border-bottom:1px solid var(--b1);display:flex;align-items:center;gap:10px}
+.sb-icon{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--blue),var(--indigo));display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.sb-name{font-size:13px;font-weight:700;line-height:1.2}
+.sb-sub{font-size:10px;color:var(--muted)}
+.sb-nav{padding:12px 10px;flex:1}
+.sb-section{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;padding:8px 10px 4px;font-weight:600}
+.nb{width:100%;display:flex;align-items:center;gap:9px;padding:9px 10px;border:none;border-radius:8px;background:none;color:var(--soft);font-family:var(--font);font-size:13px;font-weight:500;cursor:pointer;margin-bottom:2px;text-align:left;transition:all .15s;border-left:2px solid transparent}
+.nb:hover{background:var(--s2);color:var(--text)}
+.nb.on{background:rgba(59,130,246,.12);color:var(--blue);border-left-color:var(--blue)}
+.nb-icon{font-size:15px;width:18px;text-align:center;flex-shrink:0}
+.sb-bottom{padding:14px;border-top:1px solid var(--b1)}
+.user-row{display:flex;align-items:center;gap:9px;margin-bottom:10px}
+.avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--teal));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+.user-name{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.user-role{font-size:10px;color:var(--muted)}
+.signout{width:100%;padding:7px;background:none;border:1px solid var(--b2);border-radius:7px;color:var(--muted);font-family:var(--font);font-size:11px;cursor:pointer;transition:all .15s}
+.signout:hover{border-color:var(--red);color:var(--red)}
+.main{margin-left:220px;flex:1;display:flex;flex-direction:column;min-height:100vh}
+.topbar{padding:16px 28px;border-bottom:1px solid var(--b1);display:flex;align-items:center;justify-content:space-between;background:var(--s1);position:sticky;top:0;z-index:10}
+.topbar h1{font-size:18px;font-weight:700}
+.topbar p{font-size:12px;color:var(--muted);margin-top:2px}
+.topbar-right{display:flex;gap:8px}
+.btn{padding:8px 16px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font);transition:all .15s;border:1px solid var(--b2);background:var(--s2);color:var(--text)}
+.btn:hover{border-color:var(--blue);color:var(--blue)}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.btn-primary{background:linear-gradient(135deg,var(--blue),var(--indigo));border:none;color:#fff}
+.btn-primary:hover{opacity:.88;color:#fff;transform:translateY(-1px)}
+.content{flex:1;padding:24px 28px}
+.pane{display:none}.pane.on{display:block}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:22px}
+.stat{background:var(--s1);border:1px solid var(--b1);border-radius:12px;padding:18px;position:relative;overflow:hidden}
+.stat-accent{position:absolute;top:0;left:0;right:0;height:3px}
+.stat-icon{font-size:18px;margin-bottom:10px;display:block}
+.stat-val{font-size:26px;font-weight:700;line-height:1;margin-bottom:4px}
+.stat-lbl{font-size:11px;color:var(--muted);font-weight:500}
+.card{background:var(--s1);border:1px solid var(--b1);border-radius:14px;overflow:hidden;margin-bottom:16px}
+.ch{padding:14px 18px;border-bottom:1px solid var(--b1);display:flex;align-items:center;justify-content:space-between}
+.ct{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.cb{padding:18px}
+.upload-zone{border:1.5px dashed var(--b2);border-radius:12px;padding:22px;text-align:center;margin-bottom:14px;cursor:pointer;transition:all .2s;position:relative}
+.upload-zone:hover{border-color:var(--blue);background:rgba(59,130,246,.05)}
+.upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.code-area{width:100%;min-height:220px;background:var(--bg);border:1px solid var(--b2);border-radius:10px;color:#c9d1e0;font-family:var(--mono);font-size:12px;line-height:1.75;padding:14px;resize:vertical;outline:none;tab-size:2;transition:border-color .2s}
+.code-area:focus{border-color:var(--blue)}
+.code-area::placeholder{color:#2a3550}
+.lang-sel{padding:6px 10px;background:var(--s2);border:1px solid var(--b1);border-radius:8px;color:var(--text);font-family:var(--font);font-size:12px;outline:none;cursor:pointer}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{padding:4px 10px;border-radius:20px;font-size:11px;font-weight:500;border:1px solid var(--b2);cursor:pointer;color:var(--muted);transition:all .15s;user-select:none}
+.chip.on{border-color:var(--blue);color:var(--blue);background:rgba(59,130,246,.1)}
+.result-issue{padding:12px 14px;border-radius:10px;margin-bottom:10px;background:var(--s2);border-left:3px solid transparent;animation:slideIn .3s ease}
+@keyframes slideIn{from{opacity:0;transform:translateX(-6px)}to{opacity:1;transform:translateX(0)}}
+.result-issue.high{border-left-color:var(--red)}
+.result-issue.medium{border-left-color:var(--amber)}
+.result-issue.low{border-left-color:var(--green)}
+.result-issue.none{border-left-color:var(--blue)}
+.isev{font-size:10px;font-weight:600;padding:2px 8px;border-radius:4px}
+.isev-h{background:rgba(239,68,68,.15);color:#fca5a5}
+.isev-m{background:rgba(245,158,11,.15);color:#fcd34d}
+.isev-l{background:rgba(16,185,129,.15);color:#6ee7b7}
+.isev-n{background:rgba(59,130,246,.15);color:#93c5fd}
+.hist-item{display:flex;align-items:flex-start;gap:12px;padding:14px 0;border-bottom:1px solid var(--b1)}
+.hist-item:last-child{border-bottom:none;padding-bottom:0}
+.hist-score{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
+.hist-info{flex:1;min-width:0}
+.hist-name{font-size:13px;font-weight:600;margin-bottom:3px}
+.hist-meta{font-size:11px;color:var(--muted);margin-bottom:6px}
+.spinner{width:14px;height:14px;border:2px solid rgba(255,255,255,.15);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:inline-block;vertical-align:middle;margin-right:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
 </head>
-
 <body>
 
-<!-- SIDEBAR -->
 <div class="sidebar">
-  <h2>🤖 AI Review</h2>
-
-  <button onclick="showTab('analyze')" id="analyzeBtn" class="active">
-    🧠 Analyze
-  </button>
-
-  <button onclick="showTab('dashboard')" id="dashboardBtn">
-    📊 Dashboard
-  </button>
-
-  <button onclick="logout()">🚪 Logout</button>
+  <div class="sb-logo">
+    <div class="sb-icon">🔍</div>
+    <div><div class="sb-name">CodeReview AI</div><div class="sb-sub">Ontario Tech University</div></div>
+  </div>
+  <div class="sb-nav">
+    <div class="sb-section">Main</div>
+    <button class="nb on" id="nb-overview" onclick="switchPane('overview')"><span class="nb-icon">▦</span> Overview</button>
+    <button class="nb" id="nb-analyze" onclick="switchPane('analyze')"><span class="nb-icon">⚡</span> Analyze Code</button>
+    <button class="nb" id="nb-history" onclick="switchPane('history')"><span class="nb-icon">🕘</span> History</button>
+    <div class="sb-section" style="margin-top:8px">Account</div>
+    <button class="nb" id="nb-settings" onclick="switchPane('settings')"><span class="nb-icon">⚙</span> Settings</button>
+  </div>
+  <div class="sb-bottom">
+    <div class="user-row">
+      <div class="avatar" id="userAvatar">U</div>
+      <div>
+        <div class="user-name" id="userName">User</div>
+        <div class="user-role">Ontario Tech · Student</div>
+      </div>
+    </div>
+    <button class="signout" onclick="logout()">Sign out</button>
+  </div>
 </div>
 
-<!-- MAIN -->
 <div class="main">
-
-  <div class="header">AI Code Review Dashboard</div>
-
-  <!-- ANALYZE -->
-  <div id="analyzeTab" class="card">
-    <h3>Analyze Your Code</h3>
-
-    <!-- FILE UPLOAD -->
-    <input type="file" id="fileInput" accept=".js,.txt">
-    <button onclick="uploadFile()">Upload & Analyze</button>
-
-    <br><br>
-
-    <!-- TEXT INPUT -->
-    <textarea id="code" placeholder="Or paste your code here..."></textarea>
-
-    <button onclick="analyze()">Analyze Code</button>
-
-    <div id="result"></div>
+  <div class="topbar">
+    <div>
+      <h1 id="pageTitle">Overview</h1>
+      <p id="pageSub">Welcome back — here's your project summary</p>
+    </div>
+    <div class="topbar-right">
+      <button class="btn" onclick="switchPane('history')">View history</button>
+      <button class="btn btn-primary" onclick="switchPane('analyze')">▶ New Analysis</button>
+    </div>
   </div>
 
-  <!-- DASHBOARD -->
-  <div id="dashboardTab" class="card" style="display:none;">
-    <h3>Analysis History</h3>
+  <div class="content">
 
-    <button onclick="loadDashboard()">Refresh</button>
+    <!-- OVERVIEW -->
+    <div class="pane on" id="pane-overview">
+      <div class="stats">
+        <div class="stat"><div class="stat-accent" style="background:var(--blue)"></div><span class="stat-icon">📋</span><div class="stat-val" id="ov-total" style="color:var(--blue)">0</div><div class="stat-lbl">Total analyses</div></div>
+        <div class="stat"><div class="stat-accent" style="background:var(--red)"></div><span class="stat-icon">🔴</span><div class="stat-val" id="ov-high" style="color:var(--red)">0</div><div class="stat-lbl">High severity</div></div>
+        <div class="stat"><div class="stat-accent" style="background:var(--amber)"></div><span class="stat-icon">🟡</span><div class="stat-val" id="ov-med" style="color:var(--amber)">0</div><div class="stat-lbl">Medium severity</div></div>
+        <div class="stat"><div class="stat-accent" style="background:var(--green)"></div><span class="stat-icon">🟢</span><div class="stat-val" id="ov-low" style="color:var(--green)">0</div><div class="stat-lbl">Low severity</div></div>
+      </div>
+      <div id="ov-empty" style="text-align:center;padding:40px;color:var(--muted);font-size:13px">
+        No analyses yet. <a href="#" onclick="switchPane('analyze');return false;" style="color:var(--blue)">Run your first review →</a>
+      </div>
+      <div id="ov-recent" style="display:none">
+        <div class="card">
+          <div class="ch"><span class="ct">Recent analyses</span></div>
+          <div style="padding:8px 18px" id="ov-list"></div>
+        </div>
+      </div>
+    </div>
 
-    <div id="dashboard"></div>
+    <!-- ANALYZE -->
+    <div class="pane" id="pane-analyze">
+      <div class="card">
+        <div class="ch">
+          <span class="ct">Source code</span>
+          <select class="lang-sel" id="langSel">
+            <option value="javascript">JavaScript</option>
+            <option value="python">Python</option>
+            <option value="java">Java</option>
+            <option value="typescript">TypeScript</option>
+            <option value="cpp">C++</option>
+            <option value="php">PHP</option>
+          </select>
+        </div>
+        <div class="cb">
+          <div class="upload-zone" id="uploadZone">
+            <input type="file" accept=".js,.py,.java,.ts,.cpp,.php,.txt" onchange="handleFile(this)">
+            <div style="font-size:22px;margin-bottom:6px">📁</div>
+            <div id="uploadText" style="font-size:13px;color:var(--muted)">Drop a file here or <span style="color:var(--blue)">browse to upload</span></div>
+          </div>
+          <textarea class="code-area" id="codeInput" placeholder="Or paste your code here..."></textarea>
+
+          <!-- ✅ FIXED: Check for filters — these actually filter the results -->
+          <div style="margin-top:14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+            <span style="font-size:11px;color:var(--muted)">Filter results by:</span>
+            <div class="chips" id="filterChips">
+              <span class="chip on" data-filter="Security">Security</span>
+              <span class="chip on" data-filter="Bug Risk">Bugs</span>
+              <span class="chip on" data-filter="Performance">Performance</span>
+              <span class="chip on" data-filter="Code Style">Code Style</span>
+              <span class="chip on" data-filter="Best Practice">Best Practices</span>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:8px;margin-top:14px;align-items:center">
+            <button class="btn btn-primary" id="analyzeBtn" onclick="analyze()">▶ Analyze Code</button>
+            <button class="btn" onclick="clearEditor()">Clear</button>
+            <span id="analyzeStatus" style="font-size:12px;color:var(--muted);margin-left:4px"></span>
+          </div>
+        </div>
+      </div>
+
+      <div id="resultBox" style="display:none">
+        <div class="card">
+          <div class="ch">
+            <span class="ct">Analysis results</span>
+            <span id="resultCount" style="font-size:12px;color:var(--muted)"></span>
+          </div>
+          <div class="cb" id="resultContent"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HISTORY -->
+    <div class="pane" id="pane-history">
+      <div class="card">
+        <div class="ch">
+          <span class="ct">All analyses</span>
+          <button class="btn" style="padding:5px 12px;font-size:11px" onclick="loadHistory()">↻ Refresh</button>
+        </div>
+        <div style="padding:8px 18px" id="historyList">
+          <div style="color:var(--muted);font-size:13px;padding:20px 0;text-align:center">Click Refresh to load your history</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="pane" id="pane-settings">
+      <div class="card" style="max-width:480px">
+        <div class="ch"><span class="ct">Preferences</span></div>
+        <div class="cb" style="display:flex;flex-direction:column;gap:16px">
+          <div>
+            <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:500">Default language</div>
+            <select class="lang-sel" style="width:100%;padding:9px 12px">
+              <option>JavaScript</option><option>Python</option><option>TypeScript</option>
+            </select>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-top:1px solid var(--b1)">
+            <div><div style="font-size:13px;font-weight:500">Show fix suggestions</div><div style="font-size:11px;color:var(--muted);margin-top:2px">Display fixes alongside issues</div></div>
+            <input type="checkbox" checked style="accent-color:var(--blue);width:16px;height:16px">
+          </div>
+          <button class="btn btn-primary" style="width:fit-content">Save preferences</button>
+        </div>
+      </div>
+    </div>
+
   </div>
-
 </div>
 
 <script>
+// ── Auth ──────────────────────────────────────────────
+const token     = localStorage.getItem("token");
+const userEmail = localStorage.getItem("userEmail") || "";
+if (!token) window.location = "index.html";
+document.getElementById("userName").textContent   = userEmail;
+document.getElementById("userAvatar").textContent = userEmail.charAt(0).toUpperCase();
 
-// 🔒 PROTECT PAGE
-if (!localStorage.getItem("loggedIn")) {
-  window.location = "index.html";
+function authH() {
+  return { "Content-Type":"application/json", "Authorization":"Bearer " + token };
 }
 
-// 🔁 SWITCH TABS
-function showTab(tab) {
-  document.getElementById("analyzeTab").style.display =
-    tab === "analyze" ? "block" : "none";
+// ── Page navigation ───────────────────────────────────
+const pageMeta = {
+  overview: { t:"Overview",         s:"Welcome back — here's your project summary" },
+  analyze:  { t:"Analyze Code",     s:"Paste or upload code for instant AI feedback" },
+  history:  { t:"Analysis History", s:"All your previous code reviews" },
+  settings: { t:"Settings",         s:"Customize your experience" }
+};
 
-  document.getElementById("dashboardTab").style.display =
-    tab === "dashboard" ? "block" : "none";
-
-  document.getElementById("analyzeBtn").classList.remove("active");
-  document.getElementById("dashboardBtn").classList.remove("active");
-
-  document.getElementById(tab + "Btn").classList.add("active");
+function switchPane(id) {
+  document.querySelectorAll(".pane").forEach(p => p.classList.remove("on"));
+  document.querySelectorAll(".nb").forEach(b => b.classList.remove("on"));
+  document.getElementById("pane-" + id).classList.add("on");
+  const nb = document.getElementById("nb-" + id);
+  if (nb) nb.classList.add("on");
+  document.getElementById("pageTitle").textContent = pageMeta[id].t;
+  document.getElementById("pageSub").textContent   = pageMeta[id].s;
+  if (id === "history")  loadHistory();
+  if (id === "overview") loadOverview();
 }
 
-// 🚪 LOGOUT
-function logout() {
-  localStorage.clear();
-  window.location = "index.html";
+function logout() { localStorage.clear(); window.location = "index.html"; }
+
+// ── Filter chips — toggle on/off ──────────────────────
+document.querySelectorAll(".chip").forEach(c =>
+  c.addEventListener("click", () => {
+    c.classList.toggle("on");
+    // If results are showing, re-render with new filters
+    if (document.getElementById("resultBox").style.display !== "none") {
+      applyFilters();
+    }
+  })
+);
+
+// ── File upload ───────────────────────────────────────
+function handleFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  document.getElementById("uploadText").textContent = "📄 " + file.name;
+  const r   = new FileReader();
+  r.onload  = e => document.getElementById("codeInput").value = e.target.result;
+  r.readAsText(file);
 }
 
-// 🎨 COLOR HELPER
-function getColor(severity) {
-  if (severity === "High") return "#ef4444";
-  if (severity === "Medium") return "#f59e0b";
-  return "#22c55e";
+function clearEditor() {
+  document.getElementById("codeInput").value = "";
+  document.getElementById("resultBox").style.display = "none";
+  document.getElementById("analyzeStatus").textContent = "";
+  document.getElementById("uploadText").innerHTML = 'Drop a file here or <span style="color:var(--blue)">browse to upload</span>';
+  window._lastIssues = [];
 }
 
-// 🔍 ANALYZE TEXT
+// ── Score calculation ─────────────────────────────────
+function calcScore(issues) {
+  const real   = (issues||[]).filter(i => (i.severity||"").toLowerCase() !== "none");
+  const high   = real.filter(i => (i.severity||"").toLowerCase() === "high").length;
+  const medium = real.filter(i => (i.severity||"").toLowerCase() === "medium").length;
+  const low    = real.filter(i => (i.severity||"").toLowerCase() === "low").length;
+  return Math.max(0, 100 - (high*20) - (medium*8) - (low*3));
+}
+
+function scoreColor(s) {
+  return s >= 80 ? "#10b981" : s >= 55 ? "#f59e0b" : "#ef4444";
+}
+
+function sevClass(s) {
+  const l = (s||"").toLowerCase();
+  return l==="high" ? "h" : l==="medium" ? "m" : l==="low" ? "l" : "n";
+}
+
+// ── Analyze ───────────────────────────────────────────
 async function analyze() {
-  const code = document.getElementById("code").value;
+  const code   = document.getElementById("codeInput").value.trim();
+  const btn    = document.getElementById("analyzeBtn");
+  const status = document.getElementById("analyzeStatus");
 
-  const res = await fetch("http://localhost:5000/api/analyze", {
-    method: "POST",
-    headers: {"Content-Type":"application/json"},
-    body: JSON.stringify({ code, userId: "123" })
-  });
+  if (!code) { status.textContent = "⚠️ Please paste some code first."; return; }
 
-  const data = await res.json();
-  displayResult(data);
-}
+  btn.disabled  = true;
+  btn.innerHTML = '<span class="spinner"></span>Analyzing...';
+  status.textContent = "";
 
-// 📁 FILE ANALYZE
-async function uploadFile() {
-
-  const file = document.getElementById("fileInput").files[0];
-
-  if (!file) {
-    alert("Please select a file");
-    return;
-  }
-
-  const reader = new FileReader();
-
-  reader.onload = async function(e) {
-
-    const code = e.target.result;
-
-    // ✅ STEP 1 — Put code into textarea
-    document.getElementById("code").value = code;
-
-    // ✅ STEP 2 — Send to backend
+  try {
     const res = await fetch("http://localhost:5000/api/analyze", {
-      method: "POST",
-      headers: {"Content-Type":"application/json"},
-      body: JSON.stringify({ code, userId: "123" })
+      method:  "POST",
+      headers: authH(),
+      body:    JSON.stringify({ code, userId: userEmail })
     });
+
+    if (res.status === 401) { logout(); return; }
 
     const data = await res.json();
 
-    displayResult(data, file.name);
-  };
+    // ✅ Store issues globally so filters can re-apply
+    window._lastIssues = data.result?.issues || data.issues || [];
 
-  reader.readAsText(file);
-}
+    renderResult(window._lastIssues);
+    document.getElementById("resultBox").style.display = "block";
 
-// 🎯 DISPLAY RESULT (NEW STRUCTURE)
-function displayResult(data, fileName = null) {
-
-  const issues = data.result?.issues || [];
-
-  let output = `<h3>Analysis Result</h3>`;
-
-  if (fileName) {
-    output += `<p><b>File:</b> ${fileName}</p>`;
+  } catch(e) {
+    status.textContent = "❌ Cannot reach server. Is the backend running on port 5000?";
   }
 
-  issues.forEach(issue => {
-    output += `
-      <div style="
-        border-left:5px solid ${getColor(issue.severity)};
-        padding:10px;
-        margin-bottom:10px;
-        background:#1e293b;
-        border-radius:6px;
-      ">
-        <b>${issue.type}</b> (${issue.severity})<br>
-        ${issue.message}<br>
-        <i>👉 ${issue.suggestion || ""}</i>
-      </div>
-    `;
+  btn.disabled  = false;
+  btn.innerHTML = "▶ Analyze Code";
+}
+
+// ── ✅ FIXED: Apply filters to results ────────────────
+function applyFilters() {
+  const activeFilters = [...document.querySelectorAll(".chip.on")]
+    .map(c => c.dataset.filter.toLowerCase());
+
+  if (!window._lastIssues) return;
+
+  // Always show "Good Code" / "None" severity items
+  const filtered = window._lastIssues.filter(i => {
+    if ((i.severity||"").toLowerCase() === "none") return true;
+    return activeFilters.some(f => (i.type||"").toLowerCase().includes(f));
   });
 
-  document.getElementById("result").innerHTML = output;
+  renderResult(filtered);
 }
 
-// 📄 DOWNLOAD FUNCTION (GLOBAL)
-function downloadReport(id) {
-  window.open(`http://localhost:5000/api/analyze/report/${id}`, "_blank");
-}
+// ── Render results ────────────────────────────────────
+function renderResult(issues) {
+  const real  = (issues||[]).filter(i => (i.severity||"").toLowerCase() !== "none");
+  const score = calcScore(issues);
 
-// 📊 DASHBOARD
-async function loadDashboard() {
+  document.getElementById("resultCount").textContent =
+    real.length
+      ? real.length + " issue(s) found — score: " + score + "/100"
+      : "No issues found — score: 100/100";
 
-  const res = await fetch("http://localhost:5000/api/analyze/history/123");
-  const data = await res.json();
+  if (!real.length) {
+    document.getElementById("resultContent").innerHTML =
+      '<div style="text-align:center;padding:30px;color:var(--green);font-size:14px">✅ No issues found — excellent code!</div>';
+    return;
+  }
 
-  let output = `<h3>Total Analyses: ${data.length}</h3>`;
-
-  data.forEach((item, index) => {
-
-    let issuesHTML = item.result.issues.map(issue => `
-      <div style="
-        border-left:5px solid ${getColor(issue.severity)};
-        padding:8px;
-        margin:5px 0;
-        background:#020617;
-        border-radius:6px;
-      ">
-        <b>${issue.type}</b> (${issue.severity})<br>
-        ${issue.message}<br>
-        <i>👉 ${issue.suggestion || ""}</i>
+  document.getElementById("resultContent").innerHTML = issues.map(i => {
+    const sc = sevClass(i.severity);
+    return `<div class="result-issue ${(i.severity||"low").toLowerCase()}">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <span class="isev isev-${sc}">${(i.severity||"LOW").toUpperCase()}</span>
+        <span style="font-size:13px;font-weight:600">${i.type||"Issue"}</span>
       </div>
-    `).join("");
-
-    output += `
-      <div style="
-        margin-bottom:20px;
-        padding:15px;
-        background:#1e293b;
-        border-radius:10px;
-      ">
-        <b>Analysis ${index + 1}</b><br><br>
-
-        <pre>${item.code}</pre>
-
-        ${issuesHTML}
-
-        <button onclick="downloadReport('${item._id}')">
-          📄 Download Report
-        </button>
-      </div>
-    `;
-  });
-
-  document.getElementById("dashboard").innerHTML = output;
+      <div style="font-size:12px;color:var(--soft);line-height:1.6">${i.message||""}</div>
+      ${i.suggestion
+        ? `<div style="font-size:11px;color:var(--blue);margin-top:6px">💡 ${i.suggestion}</div>`
+        : ""}
+    </div>`;
+  }).join("");
 }
 
+// ── ✅ FIXED: Download report — forces save to disk ───
+async function downloadReport(id) {
+  try {
+    const res = await fetch(
+      "http://localhost:5000/api/analyze/report/" + id,
+      { headers: authH() }
+    );
+
+    if (!res.ok) { alert("Failed to download report."); return; }
+
+    // ✅ Convert response to blob and force download
+    const blob     = await res.blob();
+    const url      = window.URL.createObjectURL(blob);
+    const a        = document.createElement("a");
+    a.href         = url;
+    a.download     = "CodeReview-Report-" + id + ".pdf";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+
+  } catch(e) {
+    alert("Download failed. Make sure backend is running.");
+  }
+}
+
+// ── Load history ──────────────────────────────────────
+async function loadHistory() {
+  const list = document.getElementById("historyList");
+  list.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:20px 0;text-align:center"><span class="spinner"></span> Loading...</div>';
+
+  try {
+    const res = await fetch(
+      "http://localhost:5000/api/analyze/history/" + encodeURIComponent(userEmail),
+      { headers: authH() }
+    );
+
+    if (res.status === 401) { logout(); return; }
+
+    const data = await res.json();
+
+    if (!data.length) {
+      list.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:30px 0;text-align:center">No analyses yet. Run your first review!</div>';
+      return;
+    }
+
+    list.innerHTML = data.map((item, i) => {
+      const issues = item.result?.issues || [];
+      const real   = issues.filter(x => (x.severity||"").toLowerCase() !== "none");
+      const score  = calcScore(issues);
+      const sc     = scoreColor(score);
+      const bg     = score>=80 ? "rgba(16,185,129,.15)" : score>=55 ? "rgba(245,158,11,.15)" : "rgba(239,68,68,.15)";
+
+      const badges = real.slice(0,3).map(iss =>
+        `<span class="isev isev-${sevClass(iss.severity)}" style="font-size:10px;margin-right:4px">${iss.type}</span>`
+      ).join("");
+
+      return `<div class="hist-item">
+        <div class="hist-score" style="background:${bg};color:${sc}">${score}</div>
+        <div class="hist-info">
+          <div class="hist-name">Analysis #${data.length - i}</div>
+          <div class="hist-meta">${real.length} issue(s) · ${new Date(item.createdAt||Date.now()).toLocaleString()}</div>
+          <div style="margin-bottom:6px">${badges}</div>
+          <div style="font-size:11px;color:var(--muted);font-family:var(--mono);background:var(--s2);padding:6px 8px;border-radius:6px;white-space:pre-wrap;overflow:hidden;max-height:36px">${(item.code||"").substring(0,120)}</div>
+        </div>
+        <button class="btn" style="padding:5px 10px;font-size:11px;color:var(--blue);flex-shrink:0;margin-left:10px" onclick="downloadReport('${item._id}')">📄 PDF</button>
+      </div>`;
+    }).join("");
+
+  } catch(e) {
+    list.innerHTML = '<div style="color:var(--red);font-size:13px;padding:20px 0;text-align:center">❌ Failed to load. Is the backend running?</div>';
+  }
+}
+
+// ── Load overview ─────────────────────────────────────
+async function loadOverview() {
+  try {
+    const res = await fetch(
+      "http://localhost:5000/api/analyze/history/" + encodeURIComponent(userEmail),
+      { headers: authH() }
+    );
+    if (!res.ok) return;
+    const data = await res.json();
+    if (!data.length) return;
+
+    let high=0, med=0, low=0;
+    data.forEach(item => {
+      (item.result?.issues||[]).forEach(i => {
+        const s = (i.severity||"").toLowerCase();
+        if (s==="high") high++;
+        else if (s==="medium") med++;
+        else if (s==="low") low++;
+      });
+    });
+
+    document.getElementById("ov-total").textContent = data.length;
+    document.getElementById("ov-high").textContent  = high;
+    document.getElementById("ov-med").textContent   = med;
+    document.getElementById("ov-low").textContent   = low;
+    document.getElementById("ov-empty").style.display  = "none";
+    document.getElementById("ov-recent").style.display = "block";
+
+    document.getElementById("ov-list").innerHTML = data.slice(0,5).map((item,i) => {
+      const issues = item.result?.issues||[];
+      const real   = issues.filter(x=>(x.severity||"").toLowerCase()!=="none");
+      const score  = calcScore(issues);
+      const sc     = scoreColor(score);
+      const bg     = score>=80?"rgba(16,185,129,.15)":score>=55?"rgba(245,158,11,.15)":"rgba(239,68,68,.15)";
+      return `<div class="hist-item">
+        <div class="hist-score" style="background:${bg};color:${sc};width:38px;height:38px">${score}</div>
+        <div class="hist-info">
+          <div class="hist-name">Analysis #${data.length-i}</div>
+          <div class="hist-meta">${real.length} issues · ${new Date(item.createdAt||Date.now()).toLocaleString()}</div>
+        </div>
+        <button class="btn" style="padding:5px 10px;font-size:11px;color:var(--blue);flex-shrink:0" onclick="downloadReport('${item._id}')">📄</button>
+      </div>`;
+    }).join("");
+
+  } catch(e) { console.log("Overview error:", e); }
+}
+
+// Init
+window._lastIssues = [];
+loadOverview();
 </script>
 </body>
 </html>

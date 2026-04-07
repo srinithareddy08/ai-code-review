@@ -1,60 +1,159 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Forgot Password</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reset Password — AI Code Review</title>
   <link rel="stylesheet" href="style.css">
 </head>
+<body class="auth-page">
 
-<body class="center">
+<div class="auth-card">
+  <div class="auth-logo">
+    <div class="auth-logo-icon">🔍</div>
+    <div>
+      <div class="auth-logo-text">CodeReview AI</div>
+      <div class="auth-logo-sub">Ontario Tech University</div>
+    </div>
+  </div>
 
-<div class="card">
-  <h2>🔑 Reset Password</h2>
+  <!-- STEP 1: Enter email -->
+  <div id="step1">
+    <div class="auth-title">Reset your password</div>
+    <div class="auth-subtitle">Enter your email and we'll verify your account</div>
 
-  <input id="email" placeholder="Enter your email">
-  <input id="newPassword" type="password" placeholder="New Password">
+    <div class="field">
+      <label>Email address</label>
+      <input id="email" type="email" placeholder="you@example.com">
+    </div>
 
-  <button onclick="resetPassword()">Reset Password</button>
+    <button class="btn-primary" id="step1Btn" onclick="verifyEmail()">Continue</button>
+  </div>
 
-  <p><a href="index.html">Back to Login</a></p>
+  <!-- STEP 2: Enter new password (shown after email verified) -->
+  <div id="step2" style="display:none;">
+    <div class="auth-title">Choose a new password</div>
+    <div class="auth-subtitle" id="step2sub"></div>
 
-  <p id="msg"></p>
+    <div class="field">
+      <label>New Password</label>
+      <input id="newPassword" type="password" placeholder="At least 6 characters">
+    </div>
+
+    <div class="field">
+      <label>Confirm New Password</label>
+      <input id="confirmPassword" type="password" placeholder="Repeat new password">
+    </div>
+
+    <button class="btn-primary" id="step2Btn" onclick="resetPassword()">Reset Password</button>
+  </div>
+
+  <div class="divider"></div>
+  <div class="auth-footer"><a href="index.html">← Back to Login</a></div>
+
+  <div id="msg" class="msg"></div>
 </div>
 
 <script>
-
-async function resetPassword() {
-
+// STEP 1 — Verify email exists in the system
+async function verifyEmail() {
   const email = document.getElementById("email").value.trim();
-  const newPassword = document.getElementById("newPassword").value.trim();
+  const btn   = document.getElementById("step1Btn");
+  const msg   = document.getElementById("msg");
 
-  if (!email || !newPassword) {
-    msg.innerText = "❌ Please fill all fields";
-    return;
+  msg.className = "msg";
+  msg.textContent = "";
+
+  if (!email || !email.includes("@")) {
+    msg.textContent = "Please enter a valid email address.";
+    msg.className = "msg error"; return;
   }
 
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Verifying...';
+
   try {
-    const res = await fetch("http://localhost:5000/api/auth/forgot-password", {
+    const res  = await fetch("http://localhost:5000/api/auth/forgot-password/verify", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email })
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+      // Show step 2
+      document.getElementById("step1").style.display = "none";
+      document.getElementById("step2").style.display = "block";
+      document.getElementById("step2sub").textContent = "Resetting password for " + email;
+      msg.className = "msg";
+    } else {
+      msg.textContent = data.message || "Email not found.";
+      msg.className = "msg error";
+    }
+  } catch (err) {
+    msg.textContent = "Cannot reach server. Make sure the backend is running.";
+    msg.className = "msg error";
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = "Continue";
+}
+
+// STEP 2 — Submit new password
+async function resetPassword() {
+  const email           = document.getElementById("email").value.trim();
+  const newPassword     = document.getElementById("newPassword").value.trim();
+  const confirmPassword = document.getElementById("confirmPassword").value.trim();
+  const btn             = document.getElementById("step2Btn");
+  const msg             = document.getElementById("msg");
+
+  msg.className = "msg";
+  msg.textContent = "";
+
+  if (!newPassword || !confirmPassword) {
+    msg.textContent = "Please fill in both password fields.";
+    msg.className = "msg error"; return;
+  }
+
+  if (newPassword.length < 6) {
+    msg.textContent = "Password must be at least 6 characters.";
+    msg.className = "msg error"; return;
+  }
+
+  if (newPassword !== confirmPassword) {
+    msg.textContent = "Passwords do not match.";
+    msg.className = "msg error"; return;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Resetting...';
+
+  try {
+    const res  = await fetch("http://localhost:5000/api/auth/forgot-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, newPassword })
     });
 
     const data = await res.json();
 
     if (res.ok) {
-      msg.innerText = "✅ Password reset successful";
+      msg.textContent = "Password reset successfully! Redirecting to login...";
+      msg.className = "msg success";
+      setTimeout(() => window.location = "index.html", 2000);
     } else {
-      msg.innerText = "❌ " + data.message;
+      msg.textContent = data.message || "Reset failed. Please try again.";
+      msg.className = "msg error";
     }
-
   } catch (err) {
-    console.error(err);
-    msg.innerText = "❌ Server not reachable";
+    msg.textContent = "Cannot reach server. Make sure the backend is running.";
+    msg.className = "msg error";
   }
-}
 
+  btn.disabled = false;
+  btn.innerHTML = "Reset Password";
+}
 </script>
 </body>
-</html>
+</html> 

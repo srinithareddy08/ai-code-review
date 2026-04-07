@@ -1,21 +1,25 @@
 const mongoose = require("mongoose");
 
-const UserSchema = new mongoose.Schema({
-  timestamps: true,
-  email: {
-    type: String,
-    required: true,
-    match: /^\S+@\S+\.\S+$/,
-    unique: true,
-    lowercase: true,
-    trim: true,
+const UserSchema = new mongoose.Schema(
+  {
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
+      match: [/^\S+@\S+\.\S+$/, "Invalid email format"],
+    },
+    password: {
+      type: String,
+      required: true,
+      minlength: 6,
+      select: false,
+    },
   },
-  password: {
-    type: String,
-    required: true,
-    minlength: 6,
-    select: false // ✅ FIX: Don't return password by default when querying users
+  {
+    timestamps: true, // ← must be here, outside the fields object
   }
-});
+);
 
 module.exports = mongoose.model("User", UserSchema);

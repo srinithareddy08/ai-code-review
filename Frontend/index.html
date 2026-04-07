@@ -1,50 +1,226 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Login</title>
-  <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login — AI Code Review</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#070b14;--s1:#0d1424;--s2:#121b30;
+  --blue:#3b82f6;--indigo:#6366f1;--green:#10b981;--red:#ef4444;
+  --text:#f1f5f9;--muted:#64748b;--soft:#94a3b8;
+  --font:'Plus Jakarta Sans',sans-serif;--mono:'JetBrains Mono',monospace;
+  --glow:rgba(59,130,246,0.12);
+}
+body{
+  font-family:var(--font);background:var(--bg);color:var(--text);
+  min-height:100vh;display:flex;align-items:center;justify-content:center;
+  position:relative;overflow:hidden;
+}
+.bg-orb{position:fixed;border-radius:50%;pointer-events:none;z-index:0}
+.orb1{width:500px;height:500px;background:radial-gradient(circle,rgba(59,130,246,0.07),transparent 70%);top:-180px;left:-180px}
+.orb2{width:400px;height:400px;background:radial-gradient(circle,rgba(99,102,241,0.07),transparent 70%);bottom:-150px;right:-150px}
+.orb3{width:300px;height:300px;background:radial-gradient(circle,rgba(20,184,166,0.05),transparent 70%);top:50%;right:10%}
+.grid-bg{
+  position:fixed;inset:0;z-index:0;
+  background-image:linear-gradient(rgba(59,130,246,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(59,130,246,0.03) 1px,transparent 1px);
+  background-size:40px 40px;
+}
+.wrapper{position:relative;z-index:1;display:flex;align-items:center;gap:60px;padding:40px;max-width:900px;width:100%}
+.left-panel{flex:1;display:none}
+@media(min-width:820px){.left-panel{display:block}}
+.brand{display:flex;align-items:center;gap:12px;margin-bottom:32px}
+.brand-icon{
+  width:46px;height:46px;border-radius:12px;
+  background:linear-gradient(135deg,var(--blue),var(--indigo));
+  display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;
+}
+.brand-name{font-size:18px;font-weight:700}
+.brand-sub{font-size:12px;color:var(--muted)}
+.left-title{font-size:32px;font-weight:700;line-height:1.25;margin-bottom:16px}
+.left-title span{background:linear-gradient(135deg,var(--blue),var(--indigo));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.left-sub{font-size:15px;color:var(--soft);line-height:1.7;margin-bottom:32px}
+.feature-list{display:flex;flex-direction:column;gap:14px}
+.feature{display:flex;align-items:center;gap:12px}
+.feat-icon{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.feat-text{font-size:13px;color:var(--soft)}
+.feat-text strong{color:var(--text);font-weight:600}
+.card{
+  background:var(--s1);border:1px solid rgba(148,163,184,0.1);
+  border-radius:24px;padding:40px 36px;width:100%;max-width:420px;flex-shrink:0;
+  animation:fadeUp .5s ease;
+}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.card-brand{display:flex;align-items:center;gap:10px;margin-bottom:28px}
+.card-brand-icon{width:36px;height:36px;border-radius:9px;background:linear-gradient(135deg,var(--blue),var(--indigo));display:flex;align-items:center;justify-content:center;font-size:18px}
+.card-brand-name{font-size:14px;font-weight:700}
+.card-brand-sub{font-size:10px;color:var(--muted)}
+.card-title{font-size:22px;font-weight:700;margin-bottom:4px}
+.card-sub{font-size:13px;color:var(--muted);margin-bottom:28px}
+.field{margin-bottom:16px}
+.field label{display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:7px;text-transform:uppercase;letter-spacing:.05em}
+.field input{
+  width:100%;padding:13px 16px;background:var(--s2);
+  border:1px solid rgba(148,163,184,0.1);border-radius:10px;
+  color:var(--text);font-family:var(--font);font-size:14px;outline:none;
+  transition:border-color .2s,box-shadow .2s;
+}
+.field input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,130,246,0.1)}
+.field input::placeholder{color:var(--muted)}
+.field-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px}
+.field-row label{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:0}
+.field-row a{font-size:12px;color:var(--blue);text-decoration:none;font-weight:500}
+.field-row a:hover{text-decoration:underline}
+.btn-submit{
+  width:100%;padding:14px;margin-top:4px;
+  background:linear-gradient(135deg,var(--blue),var(--indigo));
+  border:none;border-radius:10px;color:#fff;
+  font-family:var(--font);font-size:15px;font-weight:600;
+  cursor:pointer;transition:all .2s;letter-spacing:.02em;
+}
+.btn-submit:hover{opacity:.88;transform:translateY(-1px)}
+.btn-submit:active{transform:translateY(0)}
+.btn-submit:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.divider{display:flex;align-items:center;gap:12px;margin:20px 0}
+.divider-line{flex:1;height:1px;background:rgba(148,163,184,0.1)}
+.divider-text{font-size:12px;color:var(--muted)}
+.footer-link{text-align:center;font-size:13px;color:var(--muted)}
+.footer-link a{color:var(--blue);text-decoration:none;font-weight:600}
+.footer-link a:hover{text-decoration:underline}
+.msg{margin-top:14px;padding:11px 14px;border-radius:9px;font-size:13px;display:none;line-height:1.5}
+.msg.error{background:rgba(239,68,68,.1);color:#fca5a5;border:1px solid rgba(239,68,68,.2);display:block}
+.msg.success{background:rgba(16,185,129,.1);color:#6ee7b7;border:1px solid rgba(16,185,129,.2);display:block}
+.spinner{width:15px;height:15px;border:2px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:inline-block;vertical-align:middle;margin-right:7px}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
 </head>
+<body>
 
-<body class="center"></body>
+<div class="bg-orb orb1"></div>
+<div class="bg-orb orb2"></div>
+<div class="bg-orb orb3"></div>
+<div class="grid-bg"></div>
 
-<div class="card">
-  <h2>🔐 Login</h2>
+<div class="wrapper">
+  <!-- Left panel — visible on wide screens -->
+  <div class="left-panel">
+    <div class="brand">
+      <div class="brand-icon">🔍</div>
+      <div>
+        <div class="brand-name">CodeReview AI</div>
+        <div class="brand-sub">Ontario Tech University</div>
+      </div>
+    </div>
+    <div class="left-title">Review smarter,<br>ship <span>better code</span></div>
+    <div class="left-sub">AI-powered code analysis that finds bugs, security vulnerabilities, and bad practices — instantly.</div>
+    <div class="feature-list">
+      <div class="feature">
+        <div class="feat-icon" style="background:rgba(59,130,246,.12)">🔐</div>
+        <div class="feat-text"><strong>Security scanning</strong> — detect vulnerabilities before they ship</div>
+      </div>
+      <div class="feature">
+        <div class="feat-icon" style="background:rgba(16,185,129,.12)">⚡</div>
+        <div class="feat-text"><strong>Instant feedback</strong> — results in seconds, not hours</div>
+      </div>
+      <div class="feature">
+        <div class="feat-icon" style="background:rgba(245,158,11,.12)">📄</div>
+        <div class="feat-text"><strong>PDF reports</strong> — download and share analysis results</div>
+      </div>
+    </div>
+  </div>
 
-  <input id="email" placeholder="Email">
-  <input id="password" type="password" placeholder="Password">
+  <!-- Login card -->
+  <div class="card">
+    <div class="card-brand">
+      <div class="card-brand-icon">🔍</div>
+      <div>
+        <div class="card-brand-name">CodeReview AI</div>
+        <div class="card-brand-sub">Ontario Tech University</div>
+      </div>
+    </div>
 
-  <button onclick="login()">Login</button>
-  <p>New user? <a href="register.html">Register</a></p>
+    <div class="card-title">Welcome back</div>
+    <div class="card-sub">Sign in to your account to continue</div>
 
-  <p id="msg"></p>
+    <div class="field">
+      <label>Email address</label>
+      <input id="email" type="email" placeholder="you@example.com" autocomplete="email">
+    </div>
+
+    <div class="field">
+      <div class="field-row">
+        <label>Password</label>
+        <a href="forgot.html">Forgot password?</a>
+      </div>
+      <input id="password" type="password" placeholder="Enter your password" autocomplete="current-password">
+    </div>
+
+    <button class="btn-submit" id="loginBtn" onclick="login()">Sign In</button>
+
+    <div class="divider">
+      <div class="divider-line"></div>
+      <span class="divider-text">or</span>
+      <div class="divider-line"></div>
+    </div>
+
+    <div class="footer-link">
+      Don't have an account? <a href="register.html">Create one free</a>
+    </div>
+
+    <div id="msg" class="msg"></div>
+  </div>
 </div>
 
 <script>
-
 async function login() {
+  const email    = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value.trim();
+  const btn      = document.getElementById("loginBtn");
+  const msg      = document.getElementById("msg");
 
-  const res = await fetch("http://localhost:5000/api/auth/login", {
-    method: "POST",
-    headers: {"Content-Type":"application/json"},
-    body: JSON.stringify({
-      email: document.getElementById("email").value,
-      password: document.getElementById("password").value
-    })
-  });
+  msg.className = "msg";
+  msg.textContent = "";
 
-  const data = await res.json();
-
-  if (res.status === 200) {
-    localStorage.setItem("loggedIn", true);
-    localStorage.setItem("userEmail", data.email || "User");
-
-    window.location = "app.html";
-  } else {
-    document.getElementById("msg").innerText = data.message;
+  if (!email || !password) {
+    msg.textContent = "Please fill in both email and password.";
+    msg.className = "msg error"; return;
   }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Signing in...';
+
+  try {
+    const res  = await fetch("http://localhost:5000/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password })
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("userEmail", data.user?.email || email);
+      msg.textContent = "Login successful! Redirecting...";
+      msg.className = "msg success";
+      setTimeout(() => window.location = "app.html", 800);
+    } else {
+      msg.textContent = data.message || "Incorrect email or password.";
+      msg.className = "msg error";
+    }
+  } catch (err) {
+    msg.textContent = "Cannot reach server. Make sure the backend is running.";
+    msg.className = "msg error";
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = "Sign In";
 }
 
+document.addEventListener("keydown", e => { if (e.key === "Enter") login(); });
 </script>
-
 </body>
 </html>
