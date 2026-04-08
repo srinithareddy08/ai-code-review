@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script src="config.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Register — AI Code Review</title>
@@ -215,7 +216,7 @@ async function register() {
   btn.innerHTML = '<span class="spinner"></span>Creating account...';
 
   try {
-    const res  = await fetch("http://localhost:5000/api/auth/register", {
+    const res  = await fetch(API_BASE + "/api/auth/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password })

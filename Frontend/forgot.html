@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script src="config.js"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Reset Password — AI Code Review</title>
@@ -73,7 +74,7 @@ async function verifyEmail() {
   btn.innerHTML = '<span class="spinner"></span>Verifying...';
 
   try {
-    const res  = await fetch("http://localhost:5000/api/auth/forgot-password/verify", {
+    const res  = await fetch(API_BASE + "/api/auth/forgot-password/verify", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email })

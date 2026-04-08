@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script src="config.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Login — AI Code Review</title>
@@ -193,7 +194,7 @@ async function login() {
   btn.innerHTML = '<span class="spinner"></span>Signing in...';
 
   try {
-    const res  = await fetch("http://localhost:5000/api/auth/login", {
+    const res  = await fetch(API_BASE + "/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password })

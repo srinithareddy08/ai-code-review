@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script src="config.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dashboard — AI Code Review</title>
@@ -330,7 +331,7 @@ async function analyze() {
   status.textContent = "";
 
   try {
-    const res = await fetch("http://localhost:5000/api/analyze", {
+    const res = await fetch(API_BASE + "/api/analyze", {
       method:  "POST",
       headers: authH(),
       body:    JSON.stringify({ code, userId: userEmail })
